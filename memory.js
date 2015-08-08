@@ -5,6 +5,9 @@
  * Modifications made by @_ambonilla
  *
  *    Functions:
+ *       startStopWatch -> Start the interval
+ *       delta -> Calculate time by checking the diff between timestamps
+ *       render -> Refresh and display total time played
  *       init -> main function called after onLoad
  *       choose -> Invoked in response to the addEventListener in init
  *       flipback -> Invoked in response to the setTimeout call in choose
@@ -16,6 +19,13 @@
  * */
 
 var ctx; //canvas context
+var hours = 0;
+var minutes = 0;
+var seconds = 0;
+var offset;
+var interval;
+var timedisplay = "00:00:00"
+var gamestart = true;
 var firstpick = true;
 var secondpick = true;
 
@@ -25,16 +35,19 @@ var matched;
 var starttime;
 
 var count = 0;
+var matchcounter = 0;
+var trycounter = 0;
 
 
 var backcolor = "rgb(0,0,128)";
+var textcolor = "rgb(0,0,0)";
 var tablecolor = "rgb(255,255,255)";
 
 var deck = [];
 
 //Card specs
 var firstsx = 30;
-var firstsy = 50;
+var firstsy = 90;
 
 var margin = 30;
 var cardwidth = 100;
@@ -55,6 +68,65 @@ for(var count = 0; count < imgnames.length; count++){
 /**
  * Functions
  **/
+
+function startStopWatch(){
+   if(!interval){
+      offset = Date.now();
+      interval = setInterval(update, 1);
+   }
+}
+
+function update(){
+   seconds += delta();
+   render();
+}
+
+function render(){
+   currSec = Math.floor(seconds/1000);
+   if (currSec >= 60){
+      currSec = 0;
+      seconds = 0;
+      minutes++;
+   }
+   if (minutes >= 60){
+      minutes =0;
+      hours++;
+   }
+   var tempHours = 0;
+      if (hours < 10){
+         tempHours = "0" + hours;
+      }
+      else{
+         tempHours = hours;
+      }
+   var tempMinutes = 0;
+      if (minutes <= 9){
+         tempMinutes = "0" + minutes;
+      }
+      else{
+         tempMinutes = minutes;
+      }
+   var tempSeconds = 0;
+   if (currSec >= 10){
+      tempSeconds = currSec;
+   }
+   else{
+      tempSeconds = "0" + currSec;
+   }
+
+   ctx.fillStyle = textcolor;
+   ctx.font = "bold 20pt sans-serif";
+   timedisplay = tempHours + ":" + tempMinutes + ":" + tempSeconds;
+   ctx.clearRect(0,0, canvas1.width/2, 40);
+   ctx.fillText("Time: " + timedisplay, canvas1.width/4, 30);
+}
+
+function delta(){
+   var now = Date.now();
+   var d = now - offset;
+   offset = now;
+   return d;
+}
 
 function Card(sx, sy, swidth, sheight, img, info){
    this.sx = sx;
@@ -159,6 +231,11 @@ function choose(ev){
 	}
    
 	if (i < stopnumber){
+      //If the game is starting also start the stopwatch
+      if (gamestart){
+         gamestart = false;
+         startStopWatch();
+      }
 	   if (firstpick){
 		   firstcard = i;
 		   firstpick = false;
@@ -188,15 +265,27 @@ function flipback(){
    var card;
 
    if(!matched){
+      trycounter++;
       deck[firstcard].draw();
       deck[secondcard].draw();
    }
    else{
+      trycounter++;
+      matchcounter++;
       ctx.fillStyle = tablecolor;
       ctx.fillRect(deck[secondcard].sx, deck[secondcard].sy, deck[firstcard].swidth, deck[firstcard].sheight);
       ctx.fillRect(deck[firstcard].sx, deck[firstcard].sy, deck[firstcard].swidth, deck[firstcard].sheight);
       deck[secondcard].sx = -1;
       deck[firstcard].sx = -1;
+      //Check if all the pairs are matched
+      if (matchcounter == imgnames.length){
+         var msg = "Game Over!\nTime: " + timedisplay  +"\nTries: " + trycounter;
+         //Display alert and stop timer
+         alert(msg);
+         clearInterval(interval);
+         interval = null;
+      }
+
    }
 
    //Here we set the bool values back to true in order to avoid opening more than 2 cards at the same time
@@ -212,6 +301,9 @@ function init(){
    canvas1.addEventListener('click', choose, false);
    makedeck();
    shuffle();
+   ctx.fillStyle = textcolor;
+   ctx.font = "bold 20pt sans-serif";
+   ctx.fillText("Time: " + timedisplay, canvas1.width/4, 30);
    starttime = new Date();
    starttime = Number(starttime.getTime());
 
