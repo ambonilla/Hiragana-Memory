@@ -55,9 +55,12 @@ var cardheight = 100;
 
 //End card specs
 
-var imgnames = ["a","i","u","e","o"];
+var a_names = ["a","i","u","e","o"];
+var ka_names = ["ka","ki","ku","ke","ko"];
 
 var pairs = [];
+
+var imgnames = a_names.concat(ka_names);
 
 for(var count = 0; count < imgnames.length; count++){
    var tempname = imgnames[count] + ".png";
@@ -117,8 +120,8 @@ function render(){
    ctx.fillStyle = textcolor;
    ctx.font = "bold 20pt sans-serif";
    timedisplay = tempHours + ":" + tempMinutes + ":" + tempSeconds;
-   ctx.clearRect(0,0, canvas1.width/2, 40);
-   ctx.fillText("Time: " + timedisplay, canvas1.width/4, 30);
+   ctx.clearRect(0,0, canvas1.width, 40);
+   ctx.fillText("Time: " + timedisplay, ( (canvas1.width/2) - 50), 30);
 }
 
 function delta(){
@@ -147,6 +150,7 @@ function makedeck(){
    var cx = firstsx;
    var cy = firstsy;
    var pairslength = parseInt(pairs.length);
+   var rowCounter = 1;
 
    for(i = 0; i < pairslength; i++){
       //Create image object
@@ -161,10 +165,15 @@ function makedeck(){
       deck.push(acard);
       deck.push(bcard);
 
-      cx = cx + cardwidth + margin;
 
       acard.draw();
       bcard.draw();
+
+      cx = cx + cardwidth + margin;
+      if (cx > (canvas1.width / 1.25)){
+         cx = firstsx;
+         cy = (cy + margin  + cardheight * 2) * (rowCounter++) + margin;
+      }
    }
 }
 
@@ -303,7 +312,7 @@ function init(){
    shuffle();
    ctx.fillStyle = textcolor;
    ctx.font = "bold 20pt sans-serif";
-   ctx.fillText("Time: " + timedisplay, canvas1.width/4, 30);
+   ctx.fillText("Time: " + timedisplay, ( (canvas1.width/2) - 50), 30);
    starttime = new Date();
    starttime = Number(starttime.getTime());
 
